@@ -1,0 +1,3 @@
+pelda1:10
+pelda2:100
+pelda3:2000
