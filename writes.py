@@ -77,3 +77,4 @@ def ShipEnd(pont:int, name:str):
         Behuzas()
         input("Tovább...")
         os.system("python3 main.py")
+        exit()
