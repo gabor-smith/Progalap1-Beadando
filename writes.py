@@ -11,7 +11,7 @@ def Menu():
         Behuzas()
         print("\u001b[42m  \u001b[0m                           \u001b[42m  \u001b[0m")
         Behuzas()
-        print("\u001b[42m  \u001b[0m       \u001b[37m1. Jatek            \u001b[42m  \u001b[0m")
+        print("\u001b[42m  \u001b[0m       \u001b[37m1. Játék            \u001b[42m  \u001b[0m")
         Behuzas()
         print("\u001b[42m  \u001b[0m       \u001b[37m2. Pontok           \u001b[42m  \u001b[0m")
         Behuzas()
@@ -61,6 +61,11 @@ def ShipEnd(pont:int, name:str):
         else:
                 kiirott = str(pont)
         os.system("clear")
+
+        file = open("score.txt","a")
+        file.write(name + ":" + kiirott + "\n")
+        file.close()
+
         print("\n\n")
         Behuzas()
         print("\u001b[42m                                                    \u001b[0m")

@@ -1,4 +1,4 @@
-import os, time, termios, tty, os, sys, random, writes
+import os, time, termios, tty, os, sys, random, writes, fcntl
 
 def CharIn():
         """
@@ -8,12 +8,24 @@ def CharIn():
         """
         kh = ""         # Terminálba leütött billenytű
         fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        try:
-                tty.setraw(sys.stdin.fileno())
-                kh = sys.stdin.read(1)
+
+        oldterm = termios.tcgetattr(fd)
+        newattr = termios.tcgetattr(fd)
+        newattr[3] = newattr[3] & ~termios.ICANON & ~termios.ECHO
+        termios.tcsetattr(fd, termios.TCSANOW, newattr)
+
+        oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
+        fcntl.fcntl(fd, fcntl.F_SETFL, oldflags | os.O_NONBLOCK)
+
+        try:        
+            while 1:            
+                try:
+                        kh = sys.stdin.read(1)
+                        break
+                except IOError: pass
         finally:
-                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+            termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
+            fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
         return kh
 
 def Makeline():
@@ -53,11 +65,13 @@ def KeyInput(pos:int) -> int:
                 pos += 1
         elif kar == "s":
                 pos = pos
+        elif kar == "q":
+                exit()
         return pos
 
 def Test(pos:int, lines:dict, pont:int, name:str) -> int:
         """
-                Ez figyeli, hogy a játékos belmegy-e az akadálybam illetve, hogy kimegye a játékterületről.
+                Ez figyeli, hogy a játékos belmegy-e az akadályba illetve, hogy kimegy-e a játékterületről.
 
                 pos ("Pozició") (int) értékét kapja meg
                 és
@@ -76,7 +90,7 @@ def Test(pos:int, lines:dict, pont:int, name:str) -> int:
 
 def Makeline2(pos:int, lines:dict, line):
         """
-                Létrehozza a sort amelyen a játékos mozog.
+                Létrehozza a sort amelyben a játékos mozog.
 
                 pos (int), lines (dict), line (str) váltózók felhasználásával.
         """
@@ -122,29 +136,33 @@ def Game(name:str):
         pos = 24
         first = True
         while True:
-                line = ""
-                os.system("clear")
-                writes.Behuzas()
-                print("\n\nJátékos: " + name + "   Pont:" + str(pont) + "\n")
-                int(pont)
-                writes.Behuzas()
-                Makeline2(pos, lines, line)
-                if first == True:
-                        for i in range(10):
-                                liner = ""
-                                liner = ClearRows(liner)
-                                writes.Behuzas()
-                                print(liner)
-                                lines[str(i)] = liner
-                                int(i)
-                        first = False
-                else:
-                        for i in range(9):
-                                lines[str(i)] = lines[str(i+1)]
-                                lines[str(i) + "f"] = lines[str(i+1) + "f"]
-                        lines[str(9) + "f"], lines[str(9)] = Makeline()
-                        for i in range(10):
-                                writes.Behuzas()
-                                print(lines[str(i)])
-                pos = KeyInput(pos)
-                pont = Test(pos, lines, pont, name)
+                try:
+                        time.sleep(0.1)
+                        line = ""
+                        os.system("clear")
+                        writes.Behuzas()
+                        print("\n\nJátékos: " + name + "   Pont:" + str(pont) + "\n")
+                        int(pont)
+                        writes.Behuzas()
+                        Makeline2(pos, lines, line)
+                        if first == True:
+                                for i in range(10):
+                                        liner = ""
+                                        liner = ClearRows(liner)
+                                        writes.Behuzas()
+                                        print(liner)
+                                        lines[str(i)] = liner
+                                        int(i)
+                                first = False
+                        else:
+                                for i in range(9):
+                                        lines[str(i)] = lines[str(i+1)]
+                                        lines[str(i) + "f"] = lines[str(i+1) + "f"]
+                                lines[str(9) + "f"], lines[str(9)] = Makeline()
+                                for i in range(10):
+                                        writes.Behuzas()
+                                        print(lines[str(i)])
+                        pos = KeyInput(pos)
+                        pont = Test(pos, lines, pont, name)
+                except KeyboardInterrupt:
+                        break
